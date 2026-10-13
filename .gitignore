@@ -5,3 +5,9 @@
 *.parquet
 .env
 !sample_data/*.csv
+*.duckdb
+*.duckdb.wal
+__pycache__/
+.pytest_cache/
+!poc/basel_2025.csv
+!requirements.txt
