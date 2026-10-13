@@ -4,7 +4,7 @@
 
 ## Dataset
 IBM Transactions for Anti Money Laundering (AML) on Kaggle.
-Link: <paste your Kaggle dataset URL here>
+Link: https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/data?select=HI-Medium_Trans.csv
 
 We use HI-Medium_Trans.csv and LI-Medium_Trans.csv only.
 The full files (about 3 GB each) are not stored in this repo.
