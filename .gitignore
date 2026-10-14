@@ -11,3 +11,18 @@ __pycache__/
 .pytest_cache/
 !poc/basel_2025.csv
 !requirements.txt
+
+# Local research notes and generated proof-of-concept results
+/poc/REPORT.md
+/poc/CLAUDE_FINDINGS.md
+/poc/CODEX_CROSSCHECK.md
+/poc/results/
+/poc/check_prior_currency.py
+/poc/crosscheck_claude.py
+/poc/test_prior_currency.py
+
+# Local tool caches
+.cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
