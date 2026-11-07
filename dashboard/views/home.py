@@ -20,8 +20,8 @@ c1, c2 = st.columns(2, gap="large")
 with c1:
     st.subheader("Q1 · Can we spot laundering accounts?")
     st.markdown(
-        "We rank every account from most to least suspicious, using rule clues and "
-        "graph clues, and check how many real launderers land near the top."
+        "LightGBM ranks every account from most to least suspicious, using rule clues "
+        "built in Glue, and we check how many real launderers land near the top."
     )
     k = st.columns(2)
     k[0].metric("Launderers caught in the top 10%", f"{100 * lgb.recall_top_10pct:.0f}%",
