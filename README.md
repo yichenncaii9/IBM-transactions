@@ -22,5 +22,8 @@ The first 1,000 rows of each file, for testing scripts locally.
 
 ## Layout
 - glue/lib/aml_common: shared code (Q1 tracer, Patterns.txt parser), no Spark dependency
+- glue/rule_features.py: Part D Glue job 1, Rules A, B and D per account per period, plus the edge list
+- glue/rule_taint.py: Part D Glue job 2, Rule C taint from job 1's output; writes the feature table for E and F
+- glue/deploy_part_d.py: creates or updates both Part D Glue jobs and the `part-d` workflow that runs job 2 after job 1 succeeds
 - poc: local pilot on the full files with DuckDB (see poc/README.md)
-- tests: unit tests, run with `python -m pytest tests`
+- tests: unit tests, run with `python -m pytest tests`. The Spark tests need Java 17 and `pyspark==3.5.*`, and are skipped without pyspark.
