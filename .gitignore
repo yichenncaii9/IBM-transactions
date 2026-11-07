@@ -10,6 +10,7 @@
 __pycache__/
 .pytest_cache/
 !poc/basel_2025.csv
+!dashboard/data/*.csv
 !requirements.txt
 
 # Local research notes and generated proof-of-concept results

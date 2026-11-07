@@ -25,5 +25,6 @@ The first 1,000 rows of each file, for testing scripts locally.
 - glue/rule_features.py: Part D Glue job 1, Rules A, B and D per account per period, plus the edge list
 - glue/rule_taint.py: Part D Glue job 2, Rule C taint from job 1's output; writes the feature table for E and F
 - glue/deploy_part_d.py: creates or updates both Part D Glue jobs and the `part-d` workflow that runs job 2 after job 1 succeeds
+- dashboard: one Streamlit app for Q1 and Q2, `streamlit run dashboard/app.py` (see dashboard/README.md)
 - poc: local pilot on the full files with DuckDB (see poc/README.md)
 - tests: unit tests, run with `python -m pytest tests`. The Spark tests need Java 17 and `pyspark==3.5.*`, and are skipped without pyspark.

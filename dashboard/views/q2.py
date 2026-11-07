@@ -1,50 +1,11 @@
-"""
-IS459 G2T8 - Q2 dashboard: which money corridors are risky,
-and does the Basel AML Index predict that risk?
-
-Data: one CSV exported from Athena:
-    SELECT * FROM is459_aml.q2_corridors;
-Save it next to this file as q2_corridors.csv (or upload it in the sidebar).
-
-Run:
-    pip install -r requirements.txt
-    streamlit run app.py
-"""
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(page_title="Q2 Corridor Risk", layout="wide")
+from common import BLUE, RED, TEAL, corridors, footer, rate_table
 
-DATA_FILE = Path(__file__).parent / "q2_corridors.csv"
 BAND_CUTS = (4.0, 5.0)  # Basel score: < 4 low, 4-5 medium, >= 5 high
-
-
-# ---------------------------------------------------------------- data
-@st.cache_data
-def load(src) -> pd.DataFrame:
-    df = pd.read_csv(src)
-    df.columns = [c.strip().lower() for c in df.columns]
-    for c in ["txns", "laundering", "flagged", "caught"]:
-        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
-    for c in ["from_basel_score", "to_basel_score"]:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
-    df["from_country"] = df["from_country"].fillna("No country (crypto)")
-    df["to_country"] = df["to_country"].fillna("No country (crypto)")
-
-    def scope(r):
-        names = f"{r.from_country} {r.to_country}".lower()
-        if "crypto" in names or "bitcoin" in names:
-            return "Crypto"
-        return "Domestic" if r.from_country == r.to_country else "Cross-border"
-
-    df["scope"] = df.apply(scope, axis=1)
-    df["corridor"] = df["from_country"] + " → " + df["to_country"]
-    df["rate"] = df["laundering"] / df["txns"].where(df["txns"] > 0)
-    return df
 
 
 def band(score):
@@ -55,27 +16,7 @@ def band(score):
     return "Medium (4–5)" if score < BAND_CUTS[1] else "High (≥ 5)"
 
 
-def rate_table(df, by):
-    g = df.groupby(by, as_index=False)[["txns", "laundering"]].sum()
-    g["rate_pct"] = 100 * g["laundering"] / g["txns"]
-    g["share_of_laundering_pct"] = 100 * g["laundering"] / df["laundering"].sum()
-    return g
-
-
-st.sidebar.header("Data")
-upload = st.sidebar.file_uploader("q2_corridors.csv (Athena export)", type="csv")
-if upload is not None:
-    df = load(upload)
-elif DATA_FILE.exists():
-    df = load(DATA_FILE)
-else:
-    st.title("Q2: Corridor risk")
-    st.info(
-        "No data yet. In Athena run `SELECT * FROM is459_aml.q2_corridors;`, "
-        "click **Download results**, then upload the CSV in the sidebar "
-        "(or save it as `q2_corridors.csv` next to app.py)."
-    )
-    st.stop()
+df = corridors()
 
 min_txns = st.sidebar.slider(
     "Ignore corridors with fewer transactions than", 0, 50_000, 5_000, step=1_000,
@@ -91,8 +32,7 @@ total_laundering = df["laundering"].sum()
 avg_rate = total_laundering / total_txns
 big = df[df["txns"] >= min_txns].copy()
 
-# ---------------------------------------------------------------- header
-st.title("Q2: Which money corridors are risky?")
+st.title("Q2 · Which money corridors are risky?")
 st.caption(
     "IBM HI-Medium, 1–28 Sept 2022. A corridor is the sending bank's country → "
     "the receiving bank's country. Labels are used here because Q2 describes "
@@ -121,7 +61,7 @@ with tab1:
                  labels={"scope": "", "rate_pct": "Laundering rate (%)"})
     fig.add_hline(y=100 * avg_rate, line_dash="dash",
                   annotation_text=f"average {100 * avg_rate:.3f}%")
-    fig.update_traces(marker_color="#4C78A8")
+    fig.update_traces(marker_color=BLUE)
     fig.update_layout(height=420)
     c1, c2 = st.columns([3, 2])
     c1.plotly_chart(fig, use_container_width=True)
@@ -133,6 +73,10 @@ with tab1:
         hide_index=True, use_container_width=True)
     c2.markdown("**Takeaway:** money crossing a border is laundered far more often "
                 "than money that stays in one country.")
+    flagged, caught = df["flagged"].sum(), df["caught"].sum()
+    if flagged:
+        c2.caption(f"For comparison, simple transfer rules (fan-in, fan-out, chains, cycles) "
+                   f"raise {flagged:,.0f} alerts at {caught / flagged:.1%} precision.")
 
 # ---------------------------------------------------------------- tab 2
 with tab2:
@@ -144,7 +88,7 @@ with tab2:
                  hover_data={"txns": ":,", "laundering": ":,", "rate": ":.3%"},
                  labels={"x_avg": "Times the average laundering rate", "corridor": ""})
     fig.add_vline(x=1, line_dash="dash", annotation_text="average")
-    fig.update_traces(marker_color="#E45756")
+    fig.update_traces(marker_color=RED)
     fig.update_layout(height=max(380, 32 * n))
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"Only corridors with at least {min_txns:,} transactions "
@@ -171,7 +115,7 @@ with tab3:
                      labels={col: f"Basel AML score ({side}), higher = riskier",
                              "y": "Laundering rate (%)"},
                      opacity=0.6, size_max=40)
-    fig.update_traces(marker_color="#4C78A8")
+    fig.update_traces(marker_color=BLUE)
     fig.update_layout(height=460, yaxis_title="Laundering rate (%)")
     c1.plotly_chart(fig, use_container_width=True)
 
@@ -184,7 +128,7 @@ with tab3:
     bt = bt.sort_values("band")
     fig2 = px.bar(bt, x="band", y="rate_pct", text=bt["rate_pct"].map("{:.3f}%".format),
                   labels={"band": "Basel band", "rate_pct": "Laundering rate (%)"})
-    fig2.update_traces(marker_color="#72B7B2")
+    fig2.update_traces(marker_color=TEAL)
     fig2.update_layout(height=300)
     c2.plotly_chart(fig2, use_container_width=True)
     c2.markdown("**Takeaway:** if Basel predicted risk, the dots would rise to the right "
@@ -206,3 +150,6 @@ with tab4:
     fig.update_layout(height=max(450, 32 * top_n))
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"Blank cells: no corridor, or fewer than {min_txns:,} transactions.")
+
+footer("Source: Athena is459_aml.q2_corridors (all 28 days), with Basel AML Index scores "
+       "from s3://…/reference/basel_scores/.")
