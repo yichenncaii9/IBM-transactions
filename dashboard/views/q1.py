@@ -147,8 +147,9 @@ with tab4:
         hide_index=True, use_container_width=True)
     c2.markdown(
         "**Takeaway:** accounts in a 3-account loop are illicit far more often than average. "
-        "These shapes are the graph clues the model learns from. Each account is counted "
-        "once, in its first matching shape from the top."
+        "These graph shapes drive the fixed-rules baseline and the scheme grouping; "
+        "LightGBM uses the rule clues instead. Each account is counted once, in its "
+        "first matching shape from the top."
     )
 
 footer("Sources: q1d-eval/run_models.py (eval_summary, eval_deciles, top accounts); "

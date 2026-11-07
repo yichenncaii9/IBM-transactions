@@ -75,8 +75,9 @@ with tab1:
                 "than money that stays in one country.")
     flagged, caught = df["flagged"].sum(), df["caught"].sum()
     if flagged:
-        c2.caption(f"For comparison, simple transfer rules (fan-in, fan-out, chains, cycles) "
-                   f"raise {flagged:,.0f} alerts at {caught / flagged:.1%} precision.")
+        c2.caption(f"For comparison, simple transfer rules (fan-in and fan-out in Athena, "
+                   f"chains and cycles in Neo4j) raise {flagged:,.0f} alerts at "
+                   f"{caught / flagged:.1%} precision.")
 
 # ---------------------------------------------------------------- tab 2
 with tab2:
