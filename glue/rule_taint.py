@@ -1,12 +1,10 @@
-"""Part D, job 2: Rule C taint, seeded from Rule A, B and D hits (never from the laundering labels).
-
+"""
 Reads job 1's features_abd/ and edges/. An account is a seed in a period when any of
 its Rule A, B or D scores beats the cutoff learned from the train period. Seeds start
 at taint 1.0. Each round, every account's taint becomes the USD-weighted share of its
 inflow that came from tainted senders. A fixed number of rounds stops cycles looping.
 
-Writes features/ (features_abd columns + taint), partitioned by period. This is the
-table E and F read.
+Writes features/ (features_abd columns + taint), partitioned by period.
 
 Glue arguments:
     --input_path    s3://.../features/q1/   (job 1's output_path)
@@ -115,7 +113,7 @@ def main() -> None:
         seed = seeds(features, cutoffs).cache()
         log.info("seeds per period: %s", rows_per_period(seed))
 
-    path = f"{root}/features/"
+    path = f"{root}/features_all/"
     with stage("taint and write features"):
         scores = taint(edge_list, seed, int(args["rounds"]))
         with_taint(features, scores).write.mode("overwrite").partitionBy("period").parquet(path)

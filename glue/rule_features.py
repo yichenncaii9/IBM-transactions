@@ -1,6 +1,5 @@
-"""Part D, job 1: Rules A, B and D per account per period, plus the edge list for Rule C.
-
-Reads the processed transactions (`txn_ts` as recorded) and keeps only
+"""
+Reads the processed transactions and keeps only
 the days inside the train / val / test periods. Every rule sees only its own period.
 Time order between hops is not enforced, so windows look both ways.
 
