@@ -1,10 +1,10 @@
 """Model 2 (baseline): fixed rule engine on motif counts -- no learning.
 
-The Neo4j motif counts are not ready yet, so this script creates MOCK counts
-(random integers) for every account. Once C posts the real counts, delete the
-"mock data" block and load the real table instead; the scoring function stays the same.
+Runs on the REAL Neo4j motif counts in S3 (results/neo4j/motifs/period=<p>/) over the real
+accounts LightGBM scores. Accounts with no motif row get 0 for every count.
+Credentials/bucket: see real_data.py (boto3 default chain + aws/config.py).
 
-Usage: python model2_rules.py [path_to_csv]
+Usage: python model2_rules.py [period]        # period = train | val | test (default val)
 Output: model2_predictions.csv  (columns: account, loop_count, chain_count,
         scatter_count, gather_count, score)
 """
@@ -13,9 +13,10 @@ import sys
 import numpy as np
 import pandas as pd
 
-CSV_PATH = sys.argv[1] if len(sys.argv) > 1 else "HI-Medium_sample.csv"
+from real_data import load_accounts, load_motifs
+
+PERIOD = sys.argv[1] if len(sys.argv) > 1 else "val"
 OUT_PATH = "model2_predictions.csv"
-SEED = 42
 
 # ---- Rule thresholds and points (kept in one place so the team can tweak them) ----
 LOOP_LIMIT, LOOP_PTS = 5, 50
@@ -23,29 +24,19 @@ CHAIN_LIMIT, CHAIN_PTS = 3, 30
 FAN_LIMIT, FAN_PTS = 10, 20      # applies to scatter OR gather
 MAX_SCORE = 100
 
-# ---- 1. Load the CSV and build account IDs ----
-# The raw header repeats "Account", so we supply our own column names.
-COLS = ["ts", "from_bank", "from_acct", "to_bank", "to_acct",
-        "amt_recv", "recv_ccy", "amt_paid", "pay_ccy", "fmt", "is_laund"]
-# Keep bank IDs / account numbers as strings to preserve leading zeros.
-df = pd.read_csv(CSV_PATH, header=0, names=COLS,
-                 dtype={"from_bank": str, "from_acct": str, "to_bank": str, "to_acct": str})
+# ---- 1. Load real accounts and motif counts from S3 ----
+accounts = load_accounts(PERIOD)
+motifs = load_motifs(PERIOD)
+m = accounts.merge(motifs, on="acct", how="left").fillna(0)
+assert len(m) == len(accounts), "duplicate accounts in motif table"
+print(f"Period: {PERIOD} | Accounts: {len(accounts)} | with motif row: {motifs.acct.isin(accounts.acct).sum()}")
 
-# Same "bank_id|account_number" format as the SQL files.
-from_ids = df["from_bank"] + "|" + df["from_acct"]
-to_ids = df["to_bank"] + "|" + df["to_acct"]
-accounts = pd.Series(pd.concat([from_ids, to_ids]).unique(), name="account")
-print(f"Rows: {len(df)} | Unique accounts: {len(accounts)}")
-
-# ---- 2. MOCK DATA: fake motif counts (replace with Neo4j output later) ----
-rng = np.random.default_rng(SEED)
-n = len(accounts)
 feats = pd.DataFrame({
-    "account": accounts,
-    "loop_count": rng.integers(0, 11, n),     # 0..10
-    "chain_count": rng.integers(0, 8, n),     # 0..7
-    "scatter_count": rng.integers(0, 21, n),  # 0..20
-    "gather_count": rng.integers(0, 21, n),   # 0..20
+    "account": m["acct"],
+    "loop_count": m["loops2"] + m["loops3"],   # 2-account + 3-account loops
+    "chain_count": m["chains"],
+    "scatter_count": m["scatter"],
+    "gather_count": m["gather"],
 })
 
 
