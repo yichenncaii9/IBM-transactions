@@ -113,7 +113,7 @@ def main() -> None:
         seed = seeds(features, cutoffs).cache()
         log.info("seeds per period: %s", rows_per_period(seed))
 
-    path = f"{root}/features_all/"
+    path = f"{root}/features/"
     with stage("taint and write features"):
         scores = taint(edge_list, seed, int(args["rounds"]))
         with_taint(features, scores).write.mode("overwrite").partitionBy("period").parquet(path)

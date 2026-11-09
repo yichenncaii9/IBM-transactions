@@ -1,32 +1,27 @@
+# Local environments and caches
+.venv/
+.cache/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.py[cod]
 .DS_Store
+.env
+
+# Full input datasets and generated outputs
 *.csv
 *.txt
 *.zip
 *.parquet
-.env
-!sample_data/*.csv
 *.duckdb
 *.duckdb.wal
-__pycache__/
-.pytest_cache/
+/poc/results/
+/q1b-split/out/*.csv
+/q1d-eval/out/
+
+# Small, intentional data files
+!sample_data/*.csv
 !poc/basel_2025.csv
 !dashboard/data/*.csv
 !requirements.txt
-
-# Local research notes and generated proof-of-concept results
-/poc/REPORT.md
-/poc/CLAUDE_FINDINGS.md
-/poc/CODEX_CROSSCHECK.md
-/poc/results/
-/poc/check_prior_currency.py
-/poc/crosscheck_claude.py
-/poc/test_prior_currency.py
-
-# Local tool caches
-.cache/
-.mypy_cache/
-.ruff_cache/
-*.py[cod]
-
-# Local Python environment
-.venv/

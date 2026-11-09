@@ -1,30 +1,42 @@
-# IBM-transactions
+# AML Blind Spots — IS459 Group 2
 
-# AML Blind Spots (IS459 Group 2)
+Code and supporting results for analyzing blind spots in the [IBM Transactions for Anti Money Laundering dataset](https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/data). The full transaction files are not included. The assignment brief and revised project plan are in `knowledge/`.
 
-## Dataset
-IBM Transactions for Anti Money Laundering (AML) on Kaggle.
-Link: https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/data?select=HI-Medium_Trans.csv
+## What is included
 
-We use the Medium sets only, three files each:
-- HI-Medium_Trans.csv, HI-Medium_Patterns.txt, HI-Medium_accounts.csv
-- LI-Medium_Trans.csv, LI-Medium_Patterns.txt, LI-Medium_accounts.csv
+- `glue/`: shared parsing, timestamp, and tracing logic plus account rule feature and taint jobs.
+- `q1/`, `q1b-split/`, `q1c-graph/`, `q1d-eval/`: cash-out query, temporal split, graph features, and model comparison scripts. The split choice and measurements are in [`q1b-split/out/RESULTS.md`](q1b-split/out/RESULTS.md).
+- `LightGBM_Final.ipynb`: model development notebook.
+- `dashboard/`: Streamlit presentation app with the small prepared result tables needed to run it. See [`dashboard/README.md`](dashboard/README.md).
+- `poc/`: DuckDB pilot and validation scripts. See [`poc/README.md`](poc/README.md).
+- `aws/`: AWS configuration and timestamp correction utilities. See [`aws/README.md`](aws/README.md).
+- `q2/corridors.sql`: recovered Athena SQL for the bank-country lookup, alert union, and Q2 corridor tables.
+- `Neo4j_setup.md`: graph database setup guide.
+- `sample_data/`: a small HI-Medium transaction sample for local checks.
+- `tests/`: unit tests for shared logic and Glue jobs.
 
-The full files (about 3 GB per Trans file) are not stored in this repo.
+## Run locally
 
-## How to get the data
-1. Log in to Kaggle and download the dataset from the link above.
-2. Unzip it and keep only the six files listed above.
-3. Upload them to the raw S3 bucket (see /ingestion).
+Use Python 3.11. Create an environment outside the submitted files or in `.venv/` (which is ignored), then install dependencies as needed:
 
-## sample_data
-The first 1,000 rows of each file, for testing scripts locally.
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pytest tests
+.venv/bin/python -m pip install -r dashboard/requirements.txt
+.venv/bin/python -m streamlit run dashboard/app.py
+```
 
-## Layout
-- glue/lib/aml_common: shared code (Q1 tracer, Patterns.txt parser), no Spark dependency
-- glue/rule_features.py: Part D Glue job 1, Rules A, B and D per account per period, plus the edge list
-- glue/rule_taint.py: Part D Glue job 2, Rule C taint from job 1's output; writes the feature table for E and F
-- glue/deploy_part_d.py: creates or updates both Part D Glue jobs and the `part-d` workflow that runs job 2 after job 1 succeeds
-- dashboard: one Streamlit app for Q1 and Q2, `streamlit run dashboard/app.py` (see dashboard/README.md)
-- poc: local pilot on the full files with DuckDB (see poc/README.md)
-- tests: unit tests, run with `python -m pytest tests`. The Spark tests need Java 17 and `pyspark==3.5.*`, and are skipped without pyspark.
+The pilot has its own dependencies in `poc/requirements.txt`. Large-data scripts require the original dataset and, where indicated in their docstrings, AWS or Neo4j resources. No credentials or full transaction data are included.
+
+## Data
+
+Download the HI-Medium and LI-Medium transaction, pattern, and account files from the linked Kaggle dataset for the full pipeline. The dashboard uses the prepared CSV files committed under `dashboard/data/` and does not need the full dataset or AWS access.
+
+## Interpretation
+
+The dashboard shows validation-period results from the group's experiment. `q1d-eval/run_models.py` scores the fixed-rules baseline using real graph motif counts from S3. The separate `q1d-eval/model2_rules.py` is an early prototype that generates mock motif counts; do not use its predictions as evaluation results.
+
+## Submission evidence
+
+The source code and prepared dashboard tables are here. The presentation deck and narrated run video are stored separately from this repository. The assignment also requires a narrated *setup* video, YouTube links to both videos in the presentation appendix, and a live or recorded pipeline demo. See [`docs/submission-check.md`](docs/submission-check.md) for the remaining checks before upload.
