@@ -1,6 +1,6 @@
 # AML Blind Spots — IS459 Group 2
 
-Code and supporting results for analyzing blind spots in the [IBM Transactions for Anti Money Laundering dataset](https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/data). The full transaction files are not included. The assignment brief and revised project plan are in `knowledge/`.
+Code and supporting results for analyzing blind spots in the [IBM Transactions for Anti Money Laundering dataset](https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/data). 
 
 ## What is included
 
@@ -27,7 +27,7 @@ python3 -m venv .venv
 .venv/bin/python -m streamlit run dashboard/app.py
 ```
 
-The pilot has its own dependencies in `poc/requirements.txt`. Large-data scripts require the original dataset and, where indicated in their docstrings, AWS or Neo4j resources. No credentials or full transaction data are included.
+The pilot has its own dependencies in `poc/requirements.txt`. Large-data scripts require the original dataset and, where indicated in their docstrings, AWS or Neo4j resources.
 
 ## Data
 
